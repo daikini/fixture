@@ -1,0 +1,70 @@
+Fixture
+=======
+
+Fixture allows creation of fixture data inline inside of tests rather than creating them in separate fixture files.
+
+
+Example
+=======
+
+Let's say that your application has a Person model and each person is required to have a unique email address.
+
+
+class Person < ActiveRecord::Base
+  validates_uniqueness_of :email_address
+end
+
+
+Using the normal fixture file in test/fixtures/people.yml you would add a person entry with an email address you could test against.
+
+
+first:
+  id: 1
+  name: Cosmo Spacely
+  email_address: cosmo@sprockets.com
+  
+  
+Then in your test/unit/person.rb unit test you would have a test something like this:
+
+require File.dirname(__FILE__) + '/../test_helper'
+
+class PersonTest < Test::Unit::TestCase
+  fixtures :people
+
+  def test_should_require_unique_email_address
+    person = Person.new :email_address => "cosmo@sprockets.com"
+    assert !person.valid?
+    assert_equal "has already been taken", person.errors.on(:email_address)
+
+    person = Person.new :email_address => "john.smith@example.com"
+    person.valid?
+    assert_nil person.errors.on(:email_address)
+  end
+end
+
+
+To change this example to use the fixture method you would simply remove the call to fixtures :people that loaded the yaml fixture file.
+Then in the test method you would add a call to the new fixture method and pass in the data that should be loaded.
+
+require File.dirname(__FILE__) + '/../test_helper'
+
+class PersonTest < Test::Unit::TestCase
+  # We don't need to load the people fixtures anymore
+  # fixtures :people
+                   
+  def test_should_require_unique_email_address
+    # The fixture method will load in the data we need for this test
+    fixture :person, :email_address => "cosmo@sprockets.com"
+    
+    person = Person.new :email_address => "cosmo@sprockets.com"
+    assert !person.valid?
+    assert_equal "has already been taken", person.errors.on(:email_address)
+
+    person = Person.new :email_address => "john.smith@example.com"
+    person.valid?
+    assert_nil person.errors.on(:email_address)
+  end
+end
+
+
+Copyright (c) 2007 [Jonathan Younger], released under the MIT license
